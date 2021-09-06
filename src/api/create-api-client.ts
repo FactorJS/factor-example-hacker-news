@@ -1,4 +1,4 @@
-import Firebase from "firebase/app"
+import { database, initializeApp } from "firebase/app"
 
 import "firebase/database"
 
@@ -7,7 +7,10 @@ import { ApiArguments, DataApi } from "./types"
 /**
  * The Firebase API from the client
  */
-export const createAPI = async ({ config, version }: ApiArguments): Promise<DataApi> => {
-  Firebase.initializeApp(config)
-  return Firebase.database().ref(version)
+export const createAPI = async ({
+  config,
+  version,
+}: ApiArguments): Promise<DataApi> => {
+  initializeApp(config)
+  return database().ref(version)
 }

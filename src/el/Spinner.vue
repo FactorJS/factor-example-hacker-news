@@ -21,14 +21,10 @@
   </transition>
 </template>
 
-<script>
-export default {
-  name: "Spinner",
-  props: {
-    show: {type: Boolean, default: false}
-  },
-  serverCacheKey: properties => properties.show
-}
+<script lang="ts" setup>
+defineProps({
+  show: { type: Boolean, default: false },
+})
 </script>
 
 <style lang="less">

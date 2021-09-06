@@ -1,49 +1,40 @@
-const colors = require("tailwindcss/colors");
-const tw = require("@factor/server-utils/tailwind");
-const primary = {
-  50: "#f6f5ff",
-  100: "#eeebff",
-  200: "#d4ccff",
-  300: "#baadff",
-  400: "#8670ff",
-  500: "#5233ff",
-  600: "#4a2ee6",
-  700: "#3e26bf",
-  800: "#311f99",
-  900: "#211c36",
-};
-
-const color = {
-  25: "#fafafa",
-  50: "#F8FAFC",
-  75: "#F8FAFC",
-  100: "#e3eaf3",
-  200: "#E3E8EE",
-  300: "#d1dce5",
-  400: "#aec2d2",
-  500: "#8ba8bf",
-  600: "#7d97ac",
-  700: "#687e8f",
-  800: "#536573",
-  900: "#44525e",
-};
-
-// remove tailwind warning
-delete colors.lightBlue;
-
 module.exports = {
   mode: "jit",
   purge: {
-    content: ["./src/**/*.{vue,js,ts,jsx,tsx,html}", ...tw.paths],
+    content: ["./src/**/*.{vue,js,ts,jsx,tsx,html}"],
   },
   plugins: [require("@tailwindcss/forms")],
 
   theme: {
     colors: {
-      ...colors,
+      ...require("tailwindcss/colors"),
       transparent: "transparent",
-      primary,
-      color,
+      primary: {
+        DEFAULT: "#FF6600",
+        "50": "#FFF0E5",
+        "100": "#FFE0CC",
+        "200": "#FFC299",
+        "300": "#FFA366",
+        "400": "#FF8533",
+        "500": "#FF6600",
+        "600": "#E65C00",
+        "700": "#CC5200",
+        "800": "#B34700",
+        "900": "#993D00",
+      },
+      color: {
+        DEFAULT: "#34495E",
+        "50": "#9AB0C7",
+        "100": "#8BA5BF",
+        "200": "#6D8EAE",
+        "300": "#557799",
+        "400": "#44607C",
+        "500": "#34495E",
+        "600": "#2D3F51",
+        "700": "#253544",
+        "800": "#1E2A37",
+        "900": "#172029",
+      },
     },
   },
-};
+}

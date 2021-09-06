@@ -1,44 +1,35 @@
 <template>
   <li v-if="comment" class="comment">
     <div class="by">
-      <router-link :to="'/user/' + comment.by">{{ comment.by }}</router-link>
-      {{ timeAgo(comment.time) }} ago
+      <router-link :to="'/user/' + comment?.by">{{ comment?.by }}</router-link>
+      {{ timeAgo(comment?.time) }} ago
     </div>
-    <div v-formatted-text="comment.text" class="text" />
-    <div v-if="comment.kids && comment.kids.length" class="toggle" :class="{ open }">
-      <a
-        @click="open = !open"
-      >{{ open ? '[-]' : '[+] ' + pluralize(comment.kids.length) + ' collapsed' }}</a>
+    <div v-formatted-text="comment?.text" class="text" />
+    <div
+      v-if="comment?.kids && comment?.kids.length > 0"
+      class="toggle"
+      :class="{ open }"
+    >
+      <a @click="open = !open">{{
+        open ? "[-]" : "[+] " + pluralize(comment?.kids.length) + " collapsed"
+      }}</a>
     </div>
     <ul v-show="open" class="comment-children">
-      <comment v-for="kid in comment.kids" :id="kid" :key="kid" />
+      <comment v-for="kid in comment?.kids" :id="kid" :key="kid" />
     </ul>
   </li>
 </template>
 
-<script>
-import Vue from "vue"
+<script lang="ts" setup>
+import { ref, computed } from "vue"
 import { timeAgo, stored } from "@factor/api"
-export default Vue.extend({
-  name: "Comment",
-  props: {
-    id: { type: [String, Number], default: "" }
-  },
-  data() {
-    return {
-      open: true
-    }
-  },
-  computed: {
-    comment() {
-      return stored(this.id)
-    }
-  },
-  methods: {
-    timeAgo,
-    pluralize: n => n + (n === 1 ? " reply" : " replies")
-  }
-})
+import { DataItem } from "../api/types"
+
+const pluralize = (n: number) => n + (n === 1 ? " reply" : " replies")
+
+const props = defineProps({ id: { type: [String, Number], default: "" } })
+const open = ref(true)
+const comment = computed<DataItem | undefined>(() => stored(props.id))
 </script>
 
 <style lang="less">

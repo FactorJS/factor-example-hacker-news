@@ -5,7 +5,9 @@
         <a :href="item.url" target="_blank">
           <h1>{{ item.title }}</h1>
         </a>
-        <span v-if="item.url" class="host">({{ niceHost(item.url) }})</span>
+        <span v-if="item.url" class="host text-color-500"
+          >({{ niceHost(item.url) }})</span
+        >
         <p class="meta">
           {{ item.score }} points | by
           <router-link :to="'/user/' + item.by">{{ item.by }}</router-link>
@@ -15,69 +17,50 @@
       <div class="item-view-comments">
         <p class="item-view-comments-header">
           {{ item.kids ? item.descendants + " comments" : "No comments yet." }}
-          <spinner :show="loading" />
+          <Spinner :show="loading" />
         </p>
 
         <ul v-if="!loading" class="comment-children">
-          <comment v-for="id in item.kids" :id="id" :key="id" />
+          <Comment v-for="id in item.kids" :id="id" :key="id" />
         </ul>
       </div>
     </template>
   </div>
 </template>
 
-<script>
+<script lang="ts" setup>
 import { niceHost } from "../api/util"
+import { DataItem } from "../api/types"
 import { timeAgo, stored } from "@factor/api"
-import spinner from "./Spinner.vue"
-import comment from "./Comment.vue"
-import Vue from "vue"
+import Spinner from "./Spinner.vue"
+import Comment from "./Comment.vue"
+import { ref, computed, onServerPrefetch, onMounted, watch } from "vue"
 import { fetchComments, requestItems } from "../api/data"
+import { useRoute } from "vue-router"
+const loading = ref(true)
+const route = useRoute()
+const item = computed<DataItem | undefined>(() => {
+  return stored<DataItem>(route.params.id as string)
+})
 
-export default Vue.extend({
-  name: "ItemView",
-  components: { spinner, comment },
+const getFetchComments = async () => {
+  if (!item.value || !item.value.kids) {
+    return
+  }
 
-  data: () => ({
-    loading: true,
-  }),
-
-  computed: {
-    item() {
-      return stored(this.$route.params.id)
-    },
-  },
-
-  // We only fetch the item itself before entering the view, because
-  // it might take a long time to load threads with hundreds of comments
-  // due to how the HN Firebase API works.
-  serverPrefetch() {
-    return requestItems({ ids: [this.$route.params.id] })
-  },
-
-  // refetch comments if item changed
-  watch: {
-    item: "fetchComments",
-  },
-
-  // Fetch comments when mounted on the client
-  beforeMount() {
-    this.fetchComments()
-  },
-
-  methods: {
-    timeAgo,
-    niceHost,
-    async fetchComments() {
-      if (!this.item || !this.item.kids) {
-        return
-      }
-
-      this.loading = true
-      await fetchComments(this.item)
-      this.loading = false
-    },
-  },
+  loading.value = true
+  await fetchComments(item.value)
+  loading.value = false
+}
+onMounted(() => {
+  getFetchComments()
+})
+watch(
+  () => item.value,
+  () => getFetchComments(),
+)
+onServerPrefetch(() => {
+  return requestItems({ ids: [route.params.id as string] })
 })
 </script>
 

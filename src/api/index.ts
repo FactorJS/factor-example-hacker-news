@@ -1,12 +1,22 @@
 // this is aliased in webpack config based on server/client build
 // eslint-disable-next-line import/no-unresolved
-import { createAPI } from "create-api"
-import { ListTypes, DataItem, UserItem, DataApi } from "./types"
+
+import { ListTypes, DataItem, UserItem, DataApi, ApiArguments } from "./types"
 import Firebase from "firebase"
 
 const logRequests = !!process.env.DEBUG_API
 
-let __api: DataApi
+let __api: Promise<DataApi>
+let appInitialized = false
+const getApiClient = async (args: ApiArguments): Promise<DataApi> => {
+  if (typeof window != "undefined") {
+    const { createAPI } = await import("./create-api-client")
+    return createAPI(args)
+  } else {
+    const { createAPI } = await import("./create-api-server")
+    return createAPI(args)
+  }
+}
 
 const log = (text: string): void => {
   if (logRequests) {
@@ -24,23 +34,29 @@ const warmCache = (api: DataApi): void => {
   setTimeout(() => warmCache(api), 1000 * 60 * 15)
 }
 
+const initPromise = async (): Promise<DataApi> => {
+  const api = await getApiClient({
+    version: "/v0",
+    config: {
+      databaseURL: "https://hacker-news.firebaseio.com",
+    },
+  })
+
+  // warm the front page cache every 15 min
+  // make sure to do this only once across all requests
+  if (api.onServer) {
+    warmCache(api)
+  }
+
+  return api
+}
 /**
  * Gets the universal api for HN
  */
 const getApi = async (): Promise<DataApi> => {
-  if (!__api) {
-    __api = await createAPI({
-      version: "/v0",
-      config: {
-        databaseURL: "https://hacker-news.firebaseio.com"
-      }
-    })
-
-    // warm the front page cache every 15 min
-    // make sure to do this only once across all requests
-    if (__api.onServer) {
-      warmCache(__api)
-    }
+  if (!appInitialized) {
+    appInitialized = true
+    __api = initPromise()
   }
 
   return __api
@@ -63,7 +79,7 @@ const fetch = async <T>(child: string): Promise<T> => {
     const value: T = await new Promise((resolve, reject) => {
       api.child(child).once(
         "value",
-        snapshot => {
+        (snapshot) => {
           const value_ = snapshot.val()
           // mark the timestamp when this item is cached
           if (value_) value_.__lastUpdated = Date.now()
@@ -72,7 +88,7 @@ const fetch = async <T>(child: string): Promise<T> => {
 
           resolve(value_)
         },
-        reject
+        reject,
       )
     })
 
@@ -85,7 +101,7 @@ export const fetchItem = (id: string): Promise<DataItem> => {
 }
 
 export const fetchItems = async (ids: string[]): Promise<DataItem[]> => {
-  const items = await Promise.all(ids.map(id => fetchItem(id)))
+  const items = await Promise.all(ids.map((id) => fetchItem(id)))
   return items
 }
 
@@ -108,8 +124,8 @@ export const fetchIdsByType = async (type: ListTypes): Promise<string[]> => {
  */
 export const watchList = async (
   type: ListTypes,
-  callback: Function
-): Promise<Function> => {
+  callback: (a: any) => void,
+): Promise<() => void> => {
   let first = true
   const api = await getApi()
   const reference = api.child(`${type}stories`)

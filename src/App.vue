@@ -4,27 +4,7 @@
       <nav class="inner">
         <div class="home">
           <router-link to="/" exact>
-            <svg
-              width="34"
-              height="40"
-              viewBox="0 0 34 40"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              class="logo"
-            >
-              <path
-                fill-rule="evenodd"
-                clip-rule="evenodd"
-                d="M0 20C0 12.8942 5.76036 7.13388 12.8661 7.13388H20.7739C27.8796 7.13388 33.64 12.8942 33.64 20C33.64 27.1058 27.8796 32.8661 20.7738 32.8661H12.8661C5.76035 32.8661 0 27.1058 0 20ZM12.8661 13.0968C9.0536 13.0968 5.96293 16.1875 5.96293 20C5.96293 23.8125 9.05359 26.9032 12.8661 26.9032H20.7738C24.5864 26.9032 27.677 23.8125 27.677 20C27.677 16.1875 24.5864 13.0968 20.7739 13.0968H12.8661Z"
-                fill="white"
-              />
-              <path
-                fill-rule="evenodd"
-                clip-rule="evenodd"
-                d="M14.732 40C14.3445 40 14.0304 39.6859 14.0304 39.2985V0.701522C14.0304 0.314082 14.3445 0 14.732 0H19.2918C19.6793 0 19.9934 0.314081 19.9934 0.70152V39.2985C19.9934 39.6859 19.6793 40 19.2918 40H14.732Z"
-                fill="white"
-              />
-            </svg>
+            <ElemLogo class="h-6"></ElemLogo>
           </router-link>
         </div>
         <div class="nav">
@@ -41,45 +21,55 @@
             target="_blank"
             rel="noopener"
           >
-            <factor-icon icon="fab fa-github" />
+            <svg
+              class="w-6 h-6"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
           </a>
           <a
             class="github"
-            href="https://factor.dev"
+            href="https://www.factor.so"
             target="_blank"
             rel="noopener"
-          >Built with Factor</a>
+            >Built with FactorJS</a
+          >
         </div>
       </nav>
     </header>
-    <transition name="fade" mode="out-in">
-      <router-view class="view" />
-    </transition>
+
+    <router-view v-slot="{ Component }" class="view">
+      <transition name="fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
   </div>
 </template>
-<script >
-import Vue from "vue"
-import { factorIcon } from "@factor/ui"
+<script lang="ts" setup>
+import ElemLogo from "./el/ElemLogo.vue"
+import { useMeta } from "@factor/api"
 
-export default Vue.extend({
-  components: { factorIcon },
-  metaInfo() {
-    return {
-      titleTemplate: "%s | Factor Hacker News",
-      image: require("./favicon.png")
-    }
-  }
+useMeta({
+  title: "FactorJS Hacker News",
 })
 </script>
 
 <style lang="less">
 // Set site wide CSS variables
 // Many of these are standard and used by plugins/themes also
-html.factor-app {
+html {
   --color-text: #34495e;
   --color-primary: #f60;
-  --font-family-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --font-family-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
   font-family: var(--font-family-primary);
   --font-weight-normal: 500;
   --font-weight-bold: 700;

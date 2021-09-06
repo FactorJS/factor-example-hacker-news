@@ -1,38 +1,46 @@
 <template>
   <div :key="view" class="news-view">
     <div class="news-list-nav">
-      <factor-link
+      <ElemButton
         btn="primary"
-        size="small"
+        size="sm"
         :to="`/v/${view}/${page - 1}`"
         :disabled="page <= 1"
-        >&larr; Previous</factor-link
+        >&larr; Previous</ElemButton
       >
 
-      <span class="pager">{{ page }} of {{ maxPage }}</span>
-      <factor-link
+      <span class="font-semibold">Page {{ page }} of {{ maxPage }}</span>
+      <ElemButton
         btn="primary"
-        size="small"
+        size="sm"
         :to="`/v/${view}/${page + 1}`"
         :disabled="!hasMore"
-        >more &rarr;</factor-link
+        >more &rarr;</ElemButton
       >
     </div>
 
     <transition :name="transition">
       <div v-if="displayedPage > 0" :key="displayedPage" class="news-list">
         <transition-group tag="ul" name="item">
-          <item v-for="item in displayedItems" :key="item.id" :item="item" />
+          <Item v-for="item in displayedItems" :key="item.id" :item="item" />
         </transition-group>
       </div>
     </transition>
   </div>
 </template>
 
-<script>
-import { factorLink } from "@factor/ui"
+<script lang="ts" setup>
+import { useMeta, stored, toLabel } from "@factor/api"
 import { watchList } from "../api"
-import Vue from "vue"
+import ElemButton from "@factor/ui/ElemButton.vue"
+import {
+  computed,
+  ref,
+  onServerPrefetch,
+  watch,
+  onBeforeUnmount,
+  onMounted,
+} from "vue"
 import {
   getActiveItems,
   setList,
@@ -40,93 +48,78 @@ import {
   requestListData,
   itemsPerPage,
 } from "../api/data"
-import { stored, toLabel } from "@factor/api"
-import item from "./Item.vue"
+import { ListTypes, DataItem } from "../api/types"
+import Item from "./Item.vue"
+import { useRoute, useRouter } from "vue-router"
 
-export default Vue.extend({
-  name: "ItemList",
+const router = useRouter()
+const route = useRoute()
+const transition = ref("slide-right")
+const displayedPage = ref(Number(route.params.page) || 1)
+const displayedItems = ref(getActiveItems())
+const unwatchList = ref()
 
-  components: {
-    item,
-    factorLink,
+const view = computed<ListTypes>(
+  () => (route.params.view as ListTypes) || ListTypes.TOP,
+)
+const page = computed<number>(() => Number(route.params.page) || 1)
+const maxPage = computed(() => {
+  const list = stored<DataItem[]>(view.value) || []
+  return Math.ceil(list.length / itemsPerPage)
+})
+const hasMore = computed(() => {
+  return page.value < maxPage.value
+})
+
+const loadItems = async (to = page.value, from = -1) => {
+  await requestListData({
+    type: view.value,
+  })
+
+  if (page.value < 0 || page.value > maxPage.value) {
+    router.replace(`/${view.value}/1`)
+    return
+  }
+  const transitionName = to > from ? "slide-left" : "slide-right"
+  transition.value = from === -1 ? "" : transitionName
+  displayedPage.value = to
+  displayedItems.value = getActiveItems()
+}
+
+watch(
+  () => page.value,
+  (to, from) => {
+    loadItems(to, from)
   },
-  metaInfo() {
-    return {
-      title: toLabel(this.view),
-      description: `A listing of the ${this.view} items from Hacker News (built with Factor)`,
-    }
+)
+
+watch(
+  () => view.value,
+  () => {
+    loadItems()
   },
+)
+useMeta({
+  title: toLabel(view.value),
+})
 
-  serverPrefetch() {
-    return requestListData({ type: this.view })
-  },
+onServerPrefetch(() => {
+  return requestListData({ type: view.value })
+})
 
-  data() {
-    return {
-      transition: "slide-right",
-      displayedPage: Number(this.$route.params.page) || 1,
-      displayedItems: getActiveItems(),
-    }
-  },
+onMounted(async () => {
+  loadItems(page.value)
 
-  computed: {
-    view() {
-      return this.$route.params.view || "top"
-    },
+  // watch the current list for realtime updates
+  unwatchList.value = await watchList(view.value, async (ids: string[]) => {
+    setList({ type: view.value, ids })
+    await ensureActiveItems()
+    displayedItems.value = getActiveItems()
+  })
+})
 
-    page() {
-      return Number(this.$route.params.page) || 1
-    },
-    maxPage() {
-      const list = stored(this.view) || []
-      return Math.ceil(list.length / itemsPerPage)
-    },
-    hasMore() {
-      return this.page < this.maxPage
-    },
-  },
-
-  watch: {
-    page(to, from) {
-      this.loadItems(to, from)
-    },
-    view() {
-      this.loadItems()
-    },
-  },
-
-  async beforeMount() {
-    if (this.$root._isMounted) {
-      this.loadItems(this.page)
-    }
-    // watch the current list for realtime updates
-    this.unwatchList = await watchList(this.view, async (ids) => {
-      setList({ type: this.view, ids })
-      await ensureActiveItems()
-      this.displayedItems = getActiveItems()
-    })
-  },
-
-  beforeDestroy() {
-    this.unwatchList()
-  },
-
-  methods: {
-    async loadItems(to = this.page, from = -1) {
-      await requestListData({
-        type: this.view,
-      })
-
-      if (this.page < 0 || this.page > this.maxPage) {
-        this.$router.replace(`/${this.view}/1`)
-        return
-      }
-      const transitionName = to > from ? "slide-left" : "slide-right"
-      this.transition = from === -1 ? null : transitionName
-      this.displayedPage = to
-      this.displayedItems = getActiveItems()
-    },
-  },
+onBeforeUnmount(() => {
+  if (unwatchList.value) unwatchList.value()
 })
 </script>
 
@@ -162,7 +155,7 @@ export default Vue.extend({
     color: #ccc;
   }
 
-  .pager {
+  .font-semibold {
     font-weight: 700;
   }
 }

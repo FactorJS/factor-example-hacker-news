@@ -14,8 +14,13 @@
         <li v-if="user.about" v-formatted-text="user.about" class="about" />
       </ul>
       <p class="links">
-        <a :href="'https://news.ycombinator.com/submitted?id=' + user.id">submissions</a> |
-        <a :href="'https://news.ycombinator.com/threads?id=' + user.id">comments</a>
+        <a :href="'https://news.ycombinator.com/submitted?id=' + user.id"
+          >submissions</a
+        >
+        |
+        <a :href="'https://news.ycombinator.com/threads?id=' + user.id"
+          >comments</a
+        >
       </p>
     </template>
     <template v-else-if="user === false">
@@ -24,39 +29,26 @@
   </div>
 </template>
 
-<script>
-import Vue from "vue"
-import { timeAgo, stored } from "@factor/api"
+<script lang="ts" setup>
+import { computed, onMounted, onServerPrefetch } from "vue"
+import { timeAgo, stored, useMeta } from "@factor/api"
 import { requestUser } from "../api/data"
-export default Vue.extend({
-  name: "UserView",
+import { DataItem } from "../api/types"
+import { useRoute } from "vue-router"
 
-  computed: {
-    user() {
-      return stored(this.$route.params.id)
-    }
-  },
+const route = useRoute()
+const user = computed<DataItem | undefined>(() =>
+  stored<DataItem>(route.params.id as string),
+)
+useMeta({
+  title: user.value ? user.value?.id : "User not found",
+})
+onServerPrefetch(() => {
+  return requestUser({ id: route.params.id as string })
+})
 
-  serverPrefetch() {
-    return requestUser({ id: this.$route.params.id })
-  },
-
-  async beforeMount() {
-    if (this.$root._isMounted) {
-      await requestUser({ id: this.$route.params.id })
-    }
-  },
-
-  metaInfo() {
-    const name = this.user ? this.user.id : "User not found"
-    return {
-      title: name,
-      description: `Profile for ${name}`
-    }
-  },
-  methods: {
-    timeAgo
-  }
+onMounted(async () => {
+  await requestUser({ id: route.params.id as string })
 })
 </script>
 
