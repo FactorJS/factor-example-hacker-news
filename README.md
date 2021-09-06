@@ -1,17 +1,17 @@
 <h1 align="center">Factor - Hacker News Example</h1>
 
 <p align="center">
-HackerNews clone built with Factor, Vue and TypeScript.
+HackerNews clone built with FactorJS
 </p>
 
 <p align="center">
-  <a href="https://hacker-news-example.factor.dev" target="_blank">
+  <a href="https://factor-hn.netlify.app" target="_blank">
     <img src="./screenshot-wide.jpg" width="500px" style="border: 2px solid #ff0;">
   </a>
 </p>
 
 <p align="center">
-<a href="https://hacker-news-example.factor.dev" target="_blank"><strong>Live Demo &rarr;</strong></a>
+<a href="https://factor-hn.netlify.app" target="_blank"><strong>Live Demo &rarr;</strong></a>
 </p>
 
 ## About
@@ -29,7 +29,7 @@ This is an example of the framework capabilities of Factor. Use it as a referenc
 
 ## Docs and Architecture Overview
 
-**Factor docs can be found [here](https://factor.dev).**
+**Factor docs can be found [here](https://www.factor.so).**
 
 ## Build Setup
 
