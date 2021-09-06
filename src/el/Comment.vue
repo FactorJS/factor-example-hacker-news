@@ -4,7 +4,7 @@
       <router-link :to="'/user/' + comment?.by">{{ comment?.by }}</router-link>
       {{ timeAgo(comment?.time) }} ago
     </div>
-    <div v-formatted-text="comment?.text" class="text" />
+    <div class="text">{{ comment?.text }}</div>
     <div
       v-if="comment?.kids && comment?.kids.length > 0"
       class="toggle"

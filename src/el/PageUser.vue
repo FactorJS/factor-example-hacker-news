@@ -1,26 +1,24 @@
 <template>
   <div class="user-view">
     <template v-if="user">
-      <h1>User : {{ user.id }}</h1>
+      <h1>User : {{ user?.id }}</h1>
       <ul class="meta">
         <li>
           <span class="label">Created:</span>
-          {{ timeAgo(user.created) }} ago
+          {{ timeAgo(user?.created) }} ago
         </li>
         <li>
           <span class="label">Karma:</span>
-          {{ user.karma }}
+          {{ user?.karma }}
         </li>
-        <li v-if="user.about" v-formatted-text="user.about" class="about" />
+        <li v-if="user?.about" class="about">
+          {{ user?.about }}
+        </li>
       </ul>
       <p class="links">
-        <a :href="'https://news.ycombinator.com/submitted?id=' + user.id"
-          >submissions</a
-        >
+        <a :href="'https://news.ycombinator.com/submitted?id=' + user?.id">submissions</a>
         |
-        <a :href="'https://news.ycombinator.com/threads?id=' + user.id"
-          >comments</a
-        >
+        <a :href="'https://news.ycombinator.com/threads?id=' + user?.id">comments</a>
       </p>
     </template>
     <template v-else-if="user === false">
@@ -38,7 +36,7 @@ import { useRoute } from "vue-router"
 
 const route = useRoute()
 const user = computed<DataItem | undefined>(() =>
-  stored<DataItem>(route.params.id as string),
+  stored<DataItem>(route.params.id as string)
 )
 useMeta({
   title: user.value ? user.value?.id : "User not found",
